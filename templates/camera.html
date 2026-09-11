@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}Camera - CollisionAI{% endblock %}
+{% block content %}
+<h1>Live Camera</h1>
+<p class="muted">Live vehicles, animals, potholes, humps, risk, TTC, brake %, direction &amp; trajectory — streamed via MJPEG, no desktop OpenCV window required.</p>
+
+<div class="video-wrap">
+  <img id="camera-img" src="" alt="Live ADAS camera feed">
+</div>
+
+<div class="btn-row">
+  <button id="cam-start">Start Camera</button>
+  <button id="cam-stop">Stop Camera</button>
+</div>
+
+<script>
+document.getElementById('cam-start').addEventListener('click', () => {
+  document.getElementById('camera-img').src = "{{ url_for('camera_feed') }}?t=" + Date.now();
+});
+document.getElementById('cam-stop').addEventListener('click', async () => {
+  document.getElementById('camera-img').src = "";
+  await fetch("{{ url_for('camera_stop') }}", { method: "POST" });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{% block title %}CollisionAI Dashboard{% endblock %}</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+</head>
+<body>
+<div class="app-shell">
+  <aside class="sidebar">
+    <div class="brand">
+      <span class="brand-dot"></span> CollisionAI
+    </div>
+    <nav>
+      <a href="{{ url_for('index') }}" class="{{ 'active' if request.path == '/' }}">Dashboard</a>
+      <a href="{{ url_for('video_page') }}" class="{{ 'active' if request.path == '/video' }}">Video</a>
+      <a href="{{ url_for('camera_page') }}" class="{{ 'active' if request.path == '/camera' }}">Camera</a>
+      <a href="{{ url_for('analytics_page') }}" class="{{ 'active' if request.path == '/analytics' }}">Analytics</a>
+      <a href="{{ url_for('reports_page') }}" class="{{ 'active' if request.path == '/reports' }}">Reports</a>
+    </nav>
+    <div class="sidebar-foot">ADAS visualization &amp; recommendation only.<br>No vehicle control.</div>
+  </aside>
+  <main class="content">
+    {% with messages = get_flashed_messages() %}
+      {% if messages %}
+        <div class="flash">{% for m in messages %}<div>{{ m }}</div>{% endfor %}</div>
+      {% endif %}
+    {% endwith %}
+    {% block content %}{% endblock %}
+  </main>
+</div>
+<script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

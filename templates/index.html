@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+{% block title %}Dashboard - CollisionAI{% endblock %}
+{% block content %}
+<h1>System Overview</h1>
+
+<div id="live-status" class="card-grid" data-poll="/api/status">
+  <div class="stat-card">
+    <div class="stat-label">System Status</div>
+    <div class="stat-value" id="s-status">{{ 'RUNNING' if status.active else 'IDLE' }}</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Current Input</div>
+    <div class="stat-value" id="s-source">{{ status.source or '—' }}</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Vehicles</div>
+    <div class="stat-value" id="s-vehicles">{{ status.vehicle_count if status.active else 0 }}</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Animals</div>
+    <div class="stat-value" id="s-animals">{{ status.animal_count if status.active else 0 }}</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Potholes</div>
+    <div class="stat-value" id="s-potholes">{{ status.pothole_count if status.active else 0 }}</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Humps</div>
+    <div class="stat-value" id="s-humps">{{ status.hump_count if status.active else 0 }}</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Closest Obstacle</div>
+    <div class="stat-value" id="s-closest">{{ status.closest or '—' }}</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Distance</div>
+    <div class="stat-value" id="s-distance">{{ (status.distance ~ ' m') if status.distance is not none else '—' }}</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Speed</div>
+    <div class="stat-value" id="s-speed">{{ (status.speed ~ ' km/h') if status.speed is not none else '—' }}</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">TTC</div>
+    <div class="stat-value" id="s-ttc">{{ (status.ttc ~ ' s') if status.ttc is not none else '—' }}</div>
+  </div>
+  <div class="stat-card risk-{{ status.risk|lower if status.active else 'safe' }}">
+    <div class="stat-label">Risk</div>
+    <div class="stat-value" id="s-risk">{{ status.risk if status.active else 'SAFE' }}</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Brake %</div>
+    <div class="stat-value" id="s-brake">{{ status.brake_pct if status.active else 0 }}%</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Direction</div>
+    <div class="stat-value" id="s-direction">{{ status.direction or 'STRAIGHT' }}</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Trajectory Status</div>
+    <div class="stat-value" id="s-trajectory">{{ status.trajectory_status or 'OK' }}</div>
+  </div>
+</div>
+
+<h2>Recent Sessions</h2>
+<table class="data-table">
+  <thead><tr><th>When</th><th>Source</th><th>Danger</th><th>Warning</th><th>Vehicles</th><th>Animals</th><th></th></tr></thead>
+  <tbody>
+    {% for s in sessions %}
+    <tr>
+      <td>{{ s.created_at[:16] }}</td>
+      <td>{{ s.source }}</td>
+      <td>{{ s.danger_events }}</td>
+      <td>{{ s.warning_events }}</td>
+      <td>{{ s.vehicles }}</td>
+      <td>{{ s.animals }}</td>
+      <td><a href="{{ url_for('report_detail', session_id=s.id) }}">View</a></td>
+    </tr>
+    {% else %}
+    <tr><td colspan="7">No sessions yet — run a video or camera session.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

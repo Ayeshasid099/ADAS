@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% block title %}Analytics - CollisionAI{% endblock %}
+{% block content %}
+<h1>Analytics</h1>
+
+<form method="get" class="upload-form">
+  <select name="session" onchange="this.form.submit()">
+    {% for s in sessions %}
+    <option value="{{ s.id }}" {{ 'selected' if s.id == session_id }}>{{ s.created_at[:16] }} — {{ s.source }}</option>
+    {% else %}
+    <option>No sessions yet</option>
+    {% endfor %}
+  </select>
+</form>
+
+{% if session_id %}
+<div class="chart-grid">
+  <div class="chart-box"><canvas id="chartDistance"></canvas></div>
+  <div class="chart-box"><canvas id="chartSpeed"></canvas></div>
+  <div class="chart-box"><canvas id="chartTTC"></canvas></div>
+  <div class="chart-box"><canvas id="chartRisk"></canvas></div>
+  <div class="chart-box"><canvas id="chartCounts"></canvas></div>
+  <div class="chart-box"><canvas id="chartEvents"></canvas></div>
+</div>
+{% else %}
+<p class="muted">No sessions yet — run a video or camera session first.</p>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+{% if session_id %}
+<script>
+fetch("/api/session/{{ session_id }}/data").then(r => r.json()).then(d => {
+  const darkOpts = { plugins: { legend: { labels: { color: '#cfd6e4' } } },
+    scales: { x: { ticks: { color: '#8a93a6' }, grid: { color: '#1d2433' } },
+              y: { ticks: { color: '#8a93a6' }, grid: { color: '#1d2433' } } } };
+
+  new Chart(document.getElementById('chartDistance'), { type: 'line',
+    data: { labels: d.time, datasets: [{ label: 'Distance (m)', data: d.distance, borderColor: '#00d4ff', tension: 0.25 }] },
+    options: darkOpts });
+
+  new Chart(document.getElementById('chartSpeed'), { type: 'line',
+    data: { labels: d.time, datasets: [{ label: 'Speed (km/h)', data: d.speed, borderColor: '#ffa502', tension: 0.25 }] },
+    options: darkOpts });
+
+  new Chart(document.getElementById('chartTTC'), { type: 'line',
+    data: { labels: d.time, datasets: [{ label: 'TTC (s)', data: d.ttc, borderColor: '#a55eea', tension: 0.25 }] },
+    options: darkOpts });
+
+  new Chart(document.getElementById('chartRisk'), { type: 'line',
+    data: { labels: d.time, datasets: [{ label: 'Risk (0=SAFE 1=WARN 2=DANGER)', data: d.risk, borderColor: '#e74c3c', stepped: true }] },
+    options: darkOpts });
+
+  new Chart(document.getElementById('chartCounts'), { type: 'line',
+    data: { labels: d.time, datasets: [
+      { label: 'Vehicles', data: d.vehicle_count, borderColor: '#2ecc71', tension: 0.2 },
+      { label: 'Animals', data: d.animal_count, borderColor: '#00bcd4', tension: 0.2 } ] },
+    options: darkOpts });
+
+  new Chart(document.getElementById('chartEvents'), { type: 'bar',
+    data: { labels: ['Danger', 'Warning'], datasets: [{ label: 'Events', data: [d.danger_events, d.warning_events],
+      backgroundColor: ['#e74c3c', '#f39c12'] }] },
+    options: darkOpts });
+});
+</script>
+{% endif %}
+{% endblock %}

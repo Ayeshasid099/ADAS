@@ -1,0 +1,124 @@
+:root {
+  --bg: #0b0e14;
+  --panel: #121722;
+  --panel-2: #171e2c;
+  --border: #232b3d;
+  --text: #e6ebf5;
+  --muted: #8a93a6;
+  --accent: #00d4ff;
+  --safe: #2ecc71;
+  --warn: #f39c12;
+  --danger: #e74c3c;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: "Segoe UI", Roboto, Arial, sans-serif;
+}
+
+.app-shell { display: flex; min-height: 100vh; }
+
+.sidebar {
+  width: 220px;
+  background: var(--panel);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  padding: 20px 0;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+}
+
+.brand {
+  font-weight: 700;
+  font-size: 1.15rem;
+  padding: 0 20px 20px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 12px;
+}
+.brand-dot {
+  width: 10px; height: 10px; border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 8px var(--accent);
+}
+
+nav { display: flex; flex-direction: column; gap: 2px; flex: 1; }
+nav a {
+  color: var(--muted);
+  text-decoration: none;
+  padding: 10px 20px;
+  font-size: 0.95rem;
+  border-left: 3px solid transparent;
+}
+nav a:hover { color: var(--text); background: var(--panel-2); }
+nav a.active { color: var(--accent); border-left-color: var(--accent); background: var(--panel-2); }
+
+.sidebar-foot { color: var(--muted); font-size: 0.72rem; padding: 12px 20px 0; line-height: 1.4; }
+
+.content { flex: 1; padding: 28px 34px; max-width: 1400px; }
+
+h1 { font-size: 1.5rem; margin-bottom: 18px; }
+h2 { font-size: 1.1rem; margin: 26px 0 12px; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
+
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 14px;
+  margin-bottom: 10px;
+}
+.stat-card {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 14px 16px;
+}
+.stat-label { color: var(--muted); font-size: 0.72rem; text-transform: uppercase; letter-spacing: .05em; margin-bottom: 6px; }
+.stat-value { font-size: 1.35rem; font-weight: 700; }
+.risk-safe .stat-value { color: var(--safe); }
+.risk-warning .stat-value { color: var(--warn); }
+.risk-danger .stat-value { color: var(--danger); }
+
+.data-table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 0.9rem; }
+.data-table th, .data-table td { padding: 10px 12px; border-bottom: 1px solid var(--border); text-align: left; }
+.data-table th { color: var(--muted); font-weight: 600; text-transform: uppercase; font-size: 0.72rem; }
+.data-table a { color: var(--accent); text-decoration: none; margin-right: 10px; }
+.actions a { white-space: nowrap; }
+
+.upload-form { display: flex; gap: 10px; align-items: center; margin-bottom: 18px; }
+.upload-form input, .upload-form select {
+  background: var(--panel); color: var(--text); border: 1px solid var(--border);
+  padding: 8px 10px; border-radius: 6px;
+}
+button, .btn-row a {
+  background: var(--panel-2); color: var(--text); border: 1px solid var(--border);
+  padding: 9px 16px; border-radius: 6px; cursor: pointer; text-decoration: none; display: inline-block;
+}
+button:hover, .btn-row a:hover { border-color: var(--accent); color: var(--accent); }
+.btn-row { display: flex; gap: 10px; margin: 14px 0; flex-wrap: wrap; }
+
+.video-wrap {
+  background: #000;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+  max-width: 960px;
+}
+.video-wrap img { width: 100%; display: block; min-height: 300px; background: #000; }
+
+.muted { color: var(--muted); font-size: 0.9rem; }
+
+.flash { background: rgba(243,156,18,.15); border: 1px solid var(--warn); color: var(--warn);
+  padding: 10px 14px; border-radius: 8px; margin-bottom: 16px; }
+
+.chart-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(420px, 1fr)); gap: 18px; }
+.chart-box { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 14px; height: 300px; }
+
+.report-frame { width: 100%; height: 1400px; border: 1px solid var(--border); border-radius: 10px; margin-top: 12px; background: #fff; }

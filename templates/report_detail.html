@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}Report {{ session.id }} - CollisionAI{% endblock %}
+{% block content %}
+<h1>Session Report</h1>
+<p class="muted">{{ session.created_at }} — {{ session.source }}</p>
+
+<div class="card-grid">
+  <div class="stat-card"><div class="stat-label">Duration</div><div class="stat-value">{{ session.duration_s }}s</div></div>
+  <div class="stat-card"><div class="stat-label">Frames</div><div class="stat-value">{{ session.frames }}</div></div>
+  <div class="stat-card"><div class="stat-label">Vehicles</div><div class="stat-value">{{ session.vehicles }}</div></div>
+  <div class="stat-card"><div class="stat-label">Animals</div><div class="stat-value">{{ session.animals }}</div></div>
+  <div class="stat-card"><div class="stat-label">Potholes</div><div class="stat-value">{{ session.potholes }}</div></div>
+  <div class="stat-card"><div class="stat-label">Humps</div><div class="stat-value">{{ session.humps }}</div></div>
+  <div class="stat-card risk-danger"><div class="stat-label">Danger</div><div class="stat-value">{{ session.danger_events }}</div></div>
+  <div class="stat-card risk-warning"><div class="stat-label">Warning</div><div class="stat-value">{{ session.warning_events }}</div></div>
+  <div class="stat-card"><div class="stat-label">Brake Events</div><div class="stat-value">{{ session.brake_events }}</div></div>
+  <div class="stat-card"><div class="stat-label">Min Distance</div><div class="stat-value">{{ (session.min_distance ~ ' m') if session.min_distance is not none else '—' }}</div></div>
+  <div class="stat-card"><div class="stat-label">Min TTC</div><div class="stat-value">{{ (session.min_ttc ~ ' s') if session.min_ttc is not none else '—' }}</div></div>
+</div>
+
+<div class="btn-row">
+  <a href="{{ url_for('analytics_page', session=session.id) }}">Open in Analytics</a>
+  <a href="{{ url_for('download_report', session_id=session.id) }}">DOWNLOAD HTML</a>
+  <a href="{{ url_for('download_csv', session_id=session.id) }}">DOWNLOAD CSV</a>
+</div>
+
+<h2>Full Report (graphs, snapshots &amp; event timeline)</h2>
+<p class="muted">Reuses the existing report generator's interactive Chart.js graphs, photo gallery and event timeline.</p>
+<iframe class="report-frame" src="{{ url_for('report_view_inline', session_id=session.id) }}"></iframe>
+{% endblock %}

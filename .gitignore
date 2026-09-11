@@ -1,0 +1,31 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# Local data, models, and generated outputs
+adas_40000_yolov8n_full/
+bdd100k_40k_yolov8n_seg_results/
+hump/
+infer_out/
+logs/
+modals/
+models_car/
+photole-modal/
+reports/
+uploads/
+
+# Media and generated images
+*.mp4
+*.avi
+*.mov
+*.png
+*.jpg
+*.jpeg
+
+# Editor and operating-system files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
