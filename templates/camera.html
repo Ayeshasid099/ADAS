@@ -1,25 +1,1412 @@
-{% extends "base.html" %}
-{% block title %}Camera - CollisionAI{% endblock %}
-{% block content %}
-<h1>Live Camera</h1>
-<p class="muted">Live vehicles, animals, potholes, humps, risk, TTC, brake %, direction &amp; trajectory — streamed via MJPEG, no desktop OpenCV window required.</p>
+<!DOCTYPE html>
+<html lang="en">
+<head>
 
-<div class="video-wrap">
-  <img id="camera-img" src="" alt="Live ADAS camera feed">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Live Camera - CollisionAI</title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='css/style.css') }}"
+    >
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+</head>
+
+<body>
+
+<div class="app-shell">
+
+    <!-- =====================================================
+         SIDEBAR
+         ===================================================== -->
+
+    <aside class="sidebar">
+
+        <div class="brand">
+            <span class="brand-dot"></span>
+            <span>CollisionAI<br>SMART SAFETY</span>
+        </div>
+
+
+        <nav class="sidebar-nav">
+
+            <a href="{{ url_for('index') }}">
+                <span>⌂</span>
+                <span>Dashboard</span>
+            </a>
+
+            <a
+                href="{{ url_for('camera_page') }}"
+                class="active"
+            >
+                <span>◉</span>
+                <span>Camera</span>
+            </a>
+
+            <a href="{{ url_for('analytics_page') }}">
+                <span>▥</span>
+                <span>Analytics</span>
+            </a>
+
+            <a href="{{ url_for('reports_page') }}">
+                <span>▤</span>
+                <span>Reports</span>
+            </a>
+
+        </nav>
+
+
+        <div class="sidebar-foot">
+
+            <div>
+                <span class="status-dot running"></span>
+                System Online
+            </div>
+
+            <div>
+                ADAS AI v1.0
+            </div>
+
+        </div>
+
+    </aside>
+
+
+    <!-- =====================================================
+         MAIN CONTENT
+         ===================================================== -->
+
+    <main class="content">
+
+        <div class="camera-page">
+
+            <!-- =====================================================
+                 PAGE HEADER
+                 ===================================================== -->
+
+            <div class="camera-header">
+
+                <div>
+
+                    <div class="eyebrow">
+                        <span class="eyebrow-dot"></span>
+                        LIVE AI MONITORING
+                    </div>
+
+                    <h1>Live Camera</h1>
+
+                    <p class="page-subtitle">
+                        Real-time multi-hazard road safety monitoring using the
+                        connected camera.
+                    </p>
+
+                </div>
+
+                <div class="camera-status-box">
+
+                    <span
+                        id="camera-status-dot"
+                        class="status-dot idle"
+                    ></span>
+
+                    <div>
+                        <span class="status-small-label">
+                            SYSTEM STATUS
+                        </span>
+
+                        <strong id="camera-status-text">
+                            IDLE
+                        </strong>
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- =====================================================
+                 CAMERA FEED
+                 ===================================================== -->
+
+            <div class="card camera-feed-card">
+
+                <div class="camera-card-header">
+
+                    <div>
+
+                        <h2>Live Road View</h2>
+
+                        <span class="camera-description">
+                            AI detections and safety recommendations appear
+                            directly on the camera feed.
+                        </span>
+
+                    </div>
+
+                    <div
+                        class="live-badge"
+                        id="live-badge"
+                    >
+                        <span></span>
+                        OFFLINE
+                    </div>
+
+                </div>
+
+
+                <div class="camera-feed-container">
+
+                    <img
+                        id="camera-img"
+                        src=""
+                        alt="Live CollisionAI camera feed"
+                    >
+
+                    <div
+                        id="camera-empty"
+                        class="camera-empty-state"
+                    >
+
+                        <div class="camera-empty-icon">
+                            ▶
+                        </div>
+
+                        <h3>Camera Ready</h3>
+
+                        <p>
+                            Click <strong>Start Camera</strong> to begin
+                            real-time AI road safety analysis.
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+                <!-- CAMERA CONTROLS -->
+
+                <div class="camera-controls">
+
+                    <button
+                        id="cam-start"
+                        class="camera-start-button"
+                    >
+                        <span class="button-icon">▶</span>
+                        Start Camera
+                    </button>
+
+                    <button
+                        id="cam-stop"
+                        class="camera-stop-button"
+                        disabled
+                    >
+                        <span class="button-icon">■</span>
+                        Stop Camera
+                    </button>
+
+                </div>
+
+            </div>
+
+
+            <!-- =====================================================
+                 LIVE METRICS
+                 ===================================================== -->
+
+            <div class="section-heading camera-section-heading">
+
+                <div>
+
+                    <div class="eyebrow">
+                        REAL-TIME TELEMETRY
+                    </div>
+
+                    <h2>
+                        Current Safety Metrics
+                    </h2>
+
+                </div>
+
+                <span
+                    class="live-indicator"
+                    id="metrics-indicator"
+                >
+                    ● WAITING
+                </span>
+
+            </div>
+
+
+            <div class="live-metrics">
+
+                <div class="stat-card metric-distance">
+                    <span class="stat-label">
+                        Closest Object
+                    </span>
+
+                    <strong id="cam-closest">
+                        —
+                    </strong>
+
+                    <span class="stat-unit">
+                        Detected object
+                    </span>
+                </div>
+
+
+                <div class="stat-card metric-distance">
+                    <span class="stat-label">
+                        Distance
+                    </span>
+
+                    <strong id="cam-distance">
+                        —
+                    </strong>
+
+                    <span class="stat-unit">
+                        meters
+                    </span>
+                </div>
+
+
+                <div class="stat-card metric-speed">
+                    <span class="stat-label">
+                        Speed
+                    </span>
+
+                    <strong id="cam-speed">
+                        —
+                    </strong>
+
+                    <span class="stat-unit">
+                        km/h
+                    </span>
+                </div>
+
+
+                <div class="stat-card metric-ttc">
+                    <span class="stat-label">
+                        TTC
+                    </span>
+
+                    <strong id="cam-ttc">
+                        —
+                    </strong>
+
+                    <span class="stat-unit">
+                        seconds
+                    </span>
+                </div>
+
+
+                <div class="stat-card metric-risk">
+                    <span class="stat-label">
+                        Risk Level
+                    </span>
+
+                    <strong id="cam-risk">
+                        SAFE
+                    </strong>
+
+                    <span class="stat-unit">
+                        Current assessment
+                    </span>
+                </div>
+
+
+                <div class="stat-card metric-direction">
+                    <span class="stat-label">
+                        Direction
+                    </span>
+
+                    <strong id="cam-direction">
+                        STRAIGHT
+                    </strong>
+
+                    <span class="stat-unit">
+                        Recommended path
+                    </span>
+                </div>
+
+            </div>
+
+
+            <!-- =====================================================
+                 LIVE GRAPHS
+                 ===================================================== -->
+
+            <div class="section-heading">
+
+                <div>
+
+                    <div class="eyebrow">
+                        LIVE ANALYTICS
+                    </div>
+
+                    <h2>
+                        Real-Time Analysis
+                    </h2>
+
+                </div>
+
+                <span class="section-note">
+                    Updates automatically while camera is running
+                </span>
+
+            </div>
+
+
+            <div class="live-chart-grid">
+
+                <div class="card live-chart-card">
+
+                    <div class="chart-header">
+
+                        <div>
+                            <h3>Distance</h3>
+                            <span>
+                                Closest detected object
+                            </span>
+                        </div>
+
+                        <div class="chart-icon">
+                            ↔
+                        </div>
+
+                    </div>
+
+                    <div class="chart-container">
+                        <canvas id="cameraDistanceChart"></canvas>
+                    </div>
+
+                </div>
+
+
+                <div class="card live-chart-card">
+
+                    <div class="chart-header">
+
+                        <div>
+                            <h3>Speed</h3>
+                            <span>
+                                Vehicle speed estimation
+                            </span>
+                        </div>
+
+                        <div class="chart-icon">
+                            ◉
+                        </div>
+
+                    </div>
+
+                    <div class="chart-container">
+                        <canvas id="cameraSpeedChart"></canvas>
+                    </div>
+
+                </div>
+
+
+                <div class="card live-chart-card">
+
+                    <div class="chart-header">
+
+                        <div>
+                            <h3>Time To Collision</h3>
+                            <span>
+                                Estimated TTC
+                            </span>
+                        </div>
+
+                        <div class="chart-icon">
+                            ◷
+                        </div>
+
+                    </div>
+
+                    <div class="chart-container">
+                        <canvas id="cameraTTCChart"></canvas>
+                    </div>
+
+                </div>
+
+
+                <div class="card live-chart-card">
+
+                    <div class="chart-header">
+
+                        <div>
+                            <h3>Risk Level</h3>
+                            <span>
+                                0 Safe · 1 Warning · 2 Danger
+                            </span>
+                        </div>
+
+                        <div class="chart-icon">
+                            ⚠
+                        </div>
+
+                    </div>
+
+                    <div class="chart-container">
+                        <canvas id="cameraRiskChart"></canvas>
+                    </div>
+
+                </div>
+
+
+                <div class="card live-chart-card">
+
+                    <div class="chart-header">
+
+                        <div>
+                            <h3>Detected Objects</h3>
+                            <span>
+                                Vehicles and animals
+                            </span>
+                        </div>
+
+                        <div class="chart-icon">
+                            ◇
+                        </div>
+
+                    </div>
+
+                    <div class="chart-container">
+                        <canvas id="cameraObjectsChart"></canvas>
+                    </div>
+
+                </div>
+
+
+                <div class="card live-chart-card">
+
+                    <div class="chart-header">
+
+                        <div>
+                            <h3>Road Hazards</h3>
+                            <span>
+                                Potholes and humps
+                            </span>
+                        </div>
+
+                        <div class="chart-icon">
+                            !
+                        </div>
+
+                    </div>
+
+                    <div class="chart-container">
+                        <canvas id="cameraHazardsChart"></canvas>
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- =====================================================
+                 DETECTION SUMMARY
+                 ===================================================== -->
+
+            <div class="section-heading">
+
+                <div>
+
+                    <div class="eyebrow">
+                        AI DETECTION
+                    </div>
+
+                    <h2>
+                        Detection Summary
+                    </h2>
+
+                </div>
+
+            </div>
+
+
+            <div class="detection-summary">
+
+                <div class="summary-card">
+                    <span class="summary-icon">🚗</span>
+                    <span>Vehicles</span>
+                    <strong id="cam-vehicles">0</strong>
+                </div>
+
+                <div class="summary-card">
+                    <span class="summary-icon">🐕</span>
+                    <span>Animals</span>
+                    <strong id="cam-animals">0</strong>
+                </div>
+
+                <div class="summary-card">
+                    <span class="summary-icon">⚠</span>
+                    <span>Potholes</span>
+                    <strong id="cam-potholes">0</strong>
+                </div>
+
+                <div class="summary-card">
+                    <span class="summary-icon">▲</span>
+                    <span>Humps</span>
+                    <strong id="cam-humps">0</strong>
+                </div>
+
+                <div class="summary-card">
+                    <span class="summary-icon">●</span>
+                    <span>Risk</span>
+                    <strong id="cam-summary-risk">
+                        SAFE
+                    </strong>
+                </div>
+
+                <div class="summary-card">
+                    <span class="summary-icon">➜</span>
+                    <span>Trajectory</span>
+                    <strong id="cam-trajectory">
+                        OK
+                    </strong>
+                </div>
+
+            </div>
+
+        </div>
+
+    </main>
+
 </div>
 
-<div class="btn-row">
-  <button id="cam-start">Start Camera</button>
-  <button id="cam-stop">Stop Camera</button>
-</div>
+
+<!-- =============================================================
+     CAMERA JAVASCRIPT
+     ============================================================= -->
 
 <script>
-document.getElementById('cam-start').addEventListener('click', () => {
-  document.getElementById('camera-img').src = "{{ url_for('camera_feed') }}?t=" + Date.now();
-});
-document.getElementById('cam-stop').addEventListener('click', async () => {
-  document.getElementById('camera-img').src = "";
-  await fetch("{{ url_for('camera_stop') }}", { method: "POST" });
-});
+
+let cameraRunning = false;
+let cameraTimer = null;
+
+const MAX_POINTS = 40;
+
+const labels = [];
+const distanceData = [];
+const speedData = [];
+const ttcData = [];
+const riskData = [];
+const vehicleData = [];
+const animalData = [];
+const potholeData = [];
+const humpData = [];
+
+let cameraDistanceChart;
+let cameraSpeedChart;
+let cameraTTCChart;
+let cameraRiskChart;
+let cameraObjectsChart;
+let cameraHazardsChart;
+
+
+/* ============================================================
+   CHART OPTIONS
+   ============================================================ */
+
+const cameraChartOptions = {
+
+    responsive: true,
+
+    maintainAspectRatio: false,
+
+    animation: false,
+
+    plugins: {
+
+        legend: {
+            labels: {
+                color: "#cfd6e4",
+
+                font: {
+                    size: 11
+                }
+            }
+        },
+
+        tooltip: {
+            mode: "index",
+            intersect: false
+        }
+
+    },
+
+    interaction: {
+        mode: "index",
+        intersect: false
+    },
+
+    scales: {
+
+        x: {
+            ticks: {
+                color: "#788493",
+                maxTicksLimit: 8
+            },
+
+            grid: {
+                color: "rgba(255,255,255,0.05)"
+            }
+        },
+
+        y: {
+
+            ticks: {
+                color: "#788493"
+            },
+
+            grid: {
+                color: "rgba(255,255,255,0.05)"
+            }
+        }
+
+    }
+
+};
+
+
+/* ============================================================
+   CREATE CHARTS
+   ============================================================ */
+
+function createCameraCharts() {
+
+    cameraDistanceChart = new Chart(
+        document.getElementById("cameraDistanceChart"),
+        {
+            type: "line",
+
+            data: {
+
+                labels: labels,
+
+                datasets: [{
+                    label: "Distance (m)",
+                    data: distanceData,
+
+                    borderColor: "#00d4ff",
+
+                    backgroundColor:
+                        "rgba(0,212,255,0.08)",
+
+                    fill: true,
+
+                    tension: 0.3,
+
+                    pointRadius: 2
+                }]
+
+            },
+
+            options: cameraChartOptions
+        }
+    );
+
+
+    cameraSpeedChart = new Chart(
+        document.getElementById("cameraSpeedChart"),
+        {
+            type: "line",
+
+            data: {
+
+                labels: labels,
+
+                datasets: [{
+                    label: "Speed (km/h)",
+                    data: speedData,
+
+                    borderColor: "#ffa502",
+
+                    backgroundColor:
+                        "rgba(255,165,2,0.07)",
+
+                    fill: true,
+
+                    tension: 0.3,
+
+                    pointRadius: 2
+                }]
+
+            },
+
+            options: cameraChartOptions
+        }
+    );
+
+
+    cameraTTCChart = new Chart(
+        document.getElementById("cameraTTCChart"),
+        {
+            type: "line",
+
+            data: {
+
+                labels: labels,
+
+                datasets: [{
+                    label: "TTC (s)",
+                    data: ttcData,
+
+                    borderColor: "#a55eea",
+
+                    backgroundColor:
+                        "rgba(165,94,234,0.07)",
+
+                    fill: true,
+
+                    tension: 0.3,
+
+                    pointRadius: 2
+                }]
+
+            },
+
+            options: cameraChartOptions
+        }
+    );
+
+
+    cameraRiskChart = new Chart(
+        document.getElementById("cameraRiskChart"),
+        {
+            type: "line",
+
+            data: {
+
+                labels: labels,
+
+                datasets: [{
+                    label: "Risk",
+                    data: riskData,
+
+                    borderColor: "#e74c3c",
+
+                    backgroundColor:
+                        "rgba(231,76,60,0.07)",
+
+                    fill: true,
+
+                    stepped: true,
+
+                    tension: 0,
+
+                    pointRadius: 2
+                }]
+
+            },
+
+            options: cameraChartOptions
+        }
+    );
+
+
+    cameraObjectsChart = new Chart(
+        document.getElementById("cameraObjectsChart"),
+        {
+            type: "line",
+
+            data: {
+
+                labels: labels,
+
+                datasets: [
+
+                    {
+                        label: "Vehicles",
+                        data: vehicleData,
+
+                        borderColor: "#2ecc71",
+
+                        tension: 0.3,
+
+                        pointRadius: 2
+                    },
+
+                    {
+                        label: "Animals",
+                        data: animalData,
+
+                        borderColor: "#00bcd4",
+
+                        tension: 0.3,
+
+                        pointRadius: 2
+                    }
+
+                ]
+
+            },
+
+            options: cameraChartOptions
+        }
+    );
+
+
+    cameraHazardsChart = new Chart(
+        document.getElementById("cameraHazardsChart"),
+        {
+            type: "line",
+
+            data: {
+
+                labels: labels,
+
+                datasets: [
+
+                    {
+                        label: "Potholes",
+                        data: potholeData,
+
+                        borderColor: "#f39c12",
+
+                        tension: 0.3,
+
+                        pointRadius: 2
+                    },
+
+                    {
+                        label: "Humps",
+                        data: humpData,
+
+                        borderColor: "#9b59b6",
+
+                        tension: 0.3,
+
+                        pointRadius: 2
+                    }
+
+                ]
+
+            },
+
+            options: cameraChartOptions
+        }
+    );
+
+}
+
+
+/* ============================================================
+   UPDATE CHARTS
+   ============================================================ */
+
+function updateCameraCharts(s) {
+
+    if (!cameraRunning) return;
+
+    const now = new Date();
+
+    const time =
+        now.getHours().toString().padStart(2, "0")
+        + ":"
+        + now.getMinutes().toString().padStart(2, "0")
+        + ":"
+        + now.getSeconds().toString().padStart(2, "0");
+
+
+    labels.push(time);
+
+
+    distanceData.push(
+        s.distance != null
+            ? Number(s.distance)
+            : null
+    );
+
+
+    speedData.push(
+        s.speed != null
+            ? Number(s.speed)
+            : 0
+    );
+
+
+    ttcData.push(
+        s.ttc != null
+            ? Number(s.ttc)
+            : 10
+    );
+
+
+    let riskValue = 0;
+
+    if (s.risk === "WARNING") {
+        riskValue = 1;
+    }
+
+    if (s.risk === "DANGER") {
+        riskValue = 2;
+    }
+
+    riskData.push(riskValue);
+
+
+    vehicleData.push(
+        s.vehicle_count || 0
+    );
+
+
+    animalData.push(
+        s.animal_count || 0
+    );
+
+
+    potholeData.push(
+        s.pothole_count || 0
+    );
+
+
+    humpData.push(
+        s.hump_count || 0
+    );
+
+
+    while (labels.length > MAX_POINTS) {
+
+        labels.shift();
+
+        distanceData.shift();
+        speedData.shift();
+        ttcData.shift();
+        riskData.shift();
+
+        vehicleData.shift();
+        animalData.shift();
+
+        potholeData.shift();
+        humpData.shift();
+
+    }
+
+
+    cameraDistanceChart.update("none");
+    cameraSpeedChart.update("none");
+    cameraTTCChart.update("none");
+    cameraRiskChart.update("none");
+    cameraObjectsChart.update("none");
+    cameraHazardsChart.update("none");
+
+}
+
+
+/* ============================================================
+   UPDATE UI
+   ============================================================ */
+
+function updateCameraUI(s) {
+
+    if (!cameraRunning) return;
+
+
+    document.getElementById(
+        "cam-closest"
+    ).textContent =
+        s.closest || "—";
+
+
+    document.getElementById(
+        "cam-distance"
+    ).textContent =
+        s.distance != null
+            ? s.distance + " m"
+            : "—";
+
+
+    document.getElementById(
+        "cam-speed"
+    ).textContent =
+        s.speed != null
+            ? s.speed + " km/h"
+            : "—";
+
+
+    document.getElementById(
+        "cam-ttc"
+    ).textContent =
+        s.ttc != null
+            ? s.ttc + " s"
+            : "—";
+
+
+    const risk = s.risk || "SAFE";
+
+    const riskElement =
+        document.getElementById("cam-risk");
+
+
+    riskElement.textContent = risk;
+
+    riskElement.className = "";
+
+
+    if (risk === "SAFE") {
+
+        riskElement.classList.add(
+            "risk-safe"
+        );
+
+    }
+
+    else if (risk === "WARNING") {
+
+        riskElement.classList.add(
+            "risk-warning"
+        );
+
+    }
+
+    else if (risk === "DANGER") {
+
+        riskElement.classList.add(
+            "risk-danger"
+        );
+
+    }
+
+
+    document.getElementById(
+        "cam-direction"
+    ).textContent =
+        s.direction || "STRAIGHT";
+
+
+    document.getElementById(
+        "cam-vehicles"
+    ).textContent =
+        s.vehicle_count || 0;
+
+
+    document.getElementById(
+        "cam-animals"
+    ).textContent =
+        s.animal_count || 0;
+
+
+    document.getElementById(
+        "cam-potholes"
+    ).textContent =
+        s.pothole_count || 0;
+
+
+    document.getElementById(
+        "cam-humps"
+    ).textContent =
+        s.hump_count || 0;
+
+
+    const summaryRisk =
+        document.getElementById(
+            "cam-summary-risk"
+        );
+
+
+    summaryRisk.textContent = risk;
+
+    summaryRisk.className = "";
+
+
+    if (risk === "SAFE") {
+
+        summaryRisk.classList.add(
+            "risk-safe"
+        );
+
+    }
+
+    else if (risk === "WARNING") {
+
+        summaryRisk.classList.add(
+            "risk-warning"
+        );
+
+    }
+
+    else if (risk === "DANGER") {
+
+        summaryRisk.classList.add(
+            "risk-danger"
+        );
+
+    }
+
+
+    document.getElementById(
+        "cam-trajectory"
+    ).textContent =
+        s.trajectory_status || "OK";
+
+}
+
+
+/* ============================================================
+   POLL STATUS
+   ============================================================ */
+
+async function pollCameraStatus() {
+
+    if (!cameraRunning) return;
+
+    try {
+
+        const response =
+            await fetch(
+                "{{ url_for('api_status') }}?t="
+                + Date.now(),
+                {
+                    cache: "no-store"
+                }
+            );
+
+
+        if (!response.ok) {
+            throw new Error(
+                "Status request failed"
+            );
+        }
+
+
+        const s =
+            await response.json();
+
+
+        updateCameraUI(s);
+
+        updateCameraCharts(s);
+
+    }
+
+    catch (error) {
+
+        console.log(
+            "Camera status unavailable",
+            error
+        );
+
+    }
+
+}
+
+
+/* ============================================================
+   START CAMERA
+   ============================================================ */
+
+document
+    .getElementById("cam-start")
+    .addEventListener(
+        "click",
+        function () {
+
+            if (cameraRunning) return;
+
+            cameraRunning = true;
+
+
+            const image =
+                document.getElementById(
+                    "camera-img"
+                );
+
+
+            const empty =
+                document.getElementById(
+                    "camera-empty"
+                );
+
+
+            image.src =
+                "{{ url_for('camera_feed') }}"
+                + "?t="
+                + Date.now();
+
+
+            empty.style.display = "none";
+
+
+            document.getElementById(
+                "cam-start"
+            ).disabled = true;
+
+
+            document.getElementById(
+                "cam-stop"
+            ).disabled = false;
+
+
+            document.getElementById(
+                "camera-status-text"
+            ).textContent = "RUNNING";
+
+
+            const dot =
+                document.getElementById(
+                    "camera-status-dot"
+                );
+
+
+            dot.classList.remove("idle");
+
+            dot.classList.add("running");
+
+
+            const badge =
+                document.getElementById(
+                    "live-badge"
+                );
+
+
+            badge.innerHTML =
+                "<span></span> LIVE";
+
+
+            badge.classList.add("live");
+
+
+            document.getElementById(
+                "metrics-indicator"
+            ).textContent = "● LIVE";
+
+
+            pollCameraStatus();
+
+
+            cameraTimer =
+                setInterval(
+                    pollCameraStatus,
+                    800
+                );
+
+        }
+    );
+
+
+/* ============================================================
+   STOP CAMERA
+   ============================================================ */
+
+document
+    .getElementById("cam-stop")
+    .addEventListener(
+        "click",
+        async function () {
+
+            cameraRunning = false;
+
+
+            if (cameraTimer) {
+
+                clearInterval(
+                    cameraTimer
+                );
+
+                cameraTimer = null;
+
+            }
+
+
+            document.getElementById(
+                "camera-img"
+            ).src = "";
+
+
+            try {
+
+                await fetch(
+                    "{{ url_for('camera_stop') }}",
+                    {
+                        method: "POST"
+                    }
+                );
+
+            }
+
+            catch (error) {
+
+                console.log(
+                    "Camera stop request failed",
+                    error
+                );
+
+            }
+
+
+            document.getElementById(
+                "cam-start"
+            ).disabled = false;
+
+
+            document.getElementById(
+                "cam-stop"
+            ).disabled = true;
+
+
+            document.getElementById(
+                "camera-status-text"
+            ).textContent = "IDLE";
+
+
+            const dot =
+                document.getElementById(
+                    "camera-status-dot"
+                );
+
+
+            dot.classList.remove(
+                "running"
+            );
+
+            dot.classList.add(
+                "idle"
+            );
+
+
+            const badge =
+                document.getElementById(
+                    "live-badge"
+                );
+
+
+            badge.innerHTML =
+                "<span></span> OFFLINE";
+
+
+            badge.classList.remove(
+                "live"
+            );
+
+
+            document.getElementById(
+                "metrics-indicator"
+            ).textContent =
+                "● WAITING";
+
+
+            document.getElementById(
+                "camera-empty"
+            ).style.display =
+                "flex";
+
+        }
+    );
+
+
+/* ============================================================
+   INITIALIZE
+   ============================================================ */
+
+createCameraCharts();
+
 </script>
-{% endblock %}
+
+</body>
+</html>

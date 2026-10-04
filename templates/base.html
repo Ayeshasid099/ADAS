@@ -1,37 +1,109 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>{% block title %}CollisionAI Dashboard{% endblock %}</title>
-<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>{% block title %}CollisionAI Dashboard{% endblock %}</title>
+
+    <!-- Main CSS -->
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='css/style.css') }}">
+
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
+
 <body>
-<div class="app-shell">
-  <aside class="sidebar">
-    <div class="brand">
-      <span class="brand-dot"></span> CollisionAI
-    </div>
-    <nav>
-      <a href="{{ url_for('index') }}" class="{{ 'active' if request.path == '/' }}">Dashboard</a>
-      <a href="{{ url_for('video_page') }}" class="{{ 'active' if request.path == '/video' }}">Video</a>
-      <a href="{{ url_for('camera_page') }}" class="{{ 'active' if request.path == '/camera' }}">Camera</a>
-      <a href="{{ url_for('analytics_page') }}" class="{{ 'active' if request.path == '/analytics' }}">Analytics</a>
-      <a href="{{ url_for('reports_page') }}" class="{{ 'active' if request.path == '/reports' }}">Reports</a>
-    </nav>
-    <div class="sidebar-foot">ADAS visualization &amp; recommendation only.<br>No vehicle control.</div>
-  </aside>
-  <main class="content">
-    {% with messages = get_flashed_messages() %}
-      {% if messages %}
-        <div class="flash">{% for m in messages %}<div>{{ m }}</div>{% endfor %}</div>
-      {% endif %}
-    {% endwith %}
-    {% block content %}{% endblock %}
-  </main>
-</div>
-<script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
-{% block scripts %}{% endblock %}
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+
+        <!-- Brand -->
+        <div class="brand">
+            <div class="brand-icon">◈</div>
+
+            <div class="brand-text">
+                <div class="brand-name">CollisionAI</div>
+                <div class="brand-subtitle">ROAD SAFETY AI</div>
+            </div>
+        </div>
+
+        <!-- Navigation -->
+        <nav class="nav-menu">
+
+            <a href="{{ url_for('index') }}"
+               class="nav-item {% if request.endpoint == 'index' %}active{% endif %}">
+                <span class="nav-icon">⌂</span>
+                <span>Dashboard</span>
+            </a>
+
+            <a href="{{ url_for('camera_page') }}"
+               class="nav-item {% if request.endpoint == 'camera_page' %}active{% endif %}">
+                <span class="nav-icon">◉</span>
+                <span>Camera</span>
+            </a>
+
+            <a href="{{ url_for('analytics_page') }}"
+               class="nav-item {% if request.endpoint == 'analytics_page' %}active{% endif %}">
+                <span class="nav-icon">▥</span>
+                <span>Analytics</span>
+            </a>
+
+            <a href="{{ url_for('reports_page') }}"
+               class="nav-item {% if request.endpoint == 'reports_page' %}active{% endif %}">
+                <span class="nav-icon">▤</span>
+                <span>Reports</span>
+            </a>
+
+        </nav>
+
+        <!-- Sidebar Footer -->
+        <div class="sidebar-footer">
+            <div class="sidebar-footer-line"></div>
+
+            <div class="sidebar-footer-text">
+                <span class="status-dot"></span>
+                System Online
+            </div>
+
+            <div class="sidebar-version">
+                CollisionAI v1.0
+            </div>
+        </div>
+
+    </aside>
+
+
+    <!-- MAIN CONTENT -->
+    <main class="content">
+
+        <!-- Flash Messages -->
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                <div class="flash-container">
+                    {% for message in messages %}
+                        <div class="flash-message">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+
+
+        {% block content %}
+        {% endblock %}
+
+    </main>
+
+
+    <!-- Global JavaScript -->
+    <script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+
+    <!-- Page-specific JavaScript -->
+    {% block scripts %}
+    {% endblock %}
+
 </body>
 </html>

@@ -1,0 +1,1222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CollisionAI Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+
+<body>
+<div class="app-shell">
+
+    <aside class="sidebar">
+
+        <div class="brand">
+            <span class="brand-dot"></span>
+            <span>CollisionAI<br>SMART SAFETY</span>
+        </div>
+
+        <nav>
+            <a href="{{ url_for('index') }}" class="active">⌂&nbsp; Dashboard</a>
+            <a href="{{ url_for('camera_page') }}">◉&nbsp; Camera</a>
+            <a href="{{ url_for('analytics_page') }}">▥&nbsp; Analytics</a>
+            <a href="{{ url_for('reports_page') }}">▤&nbsp; Reports</a>
+        </nav>
+
+        <!-- SAME FOOTER AS CAMERA / ANALYTICS / REPORTS -->
+        <div class="sidebar-foot">
+            <div>
+                <span class="status-dot running"></span>
+                System Online
+            </div>
+            <div>ADAS AI v1.0</div>
+        </div>
+
+    </aside>
+
+    <main class="content">
+
+        <div class="video-page">
+
+            <div class="page-header">
+                <div>
+                    <h1>CollisionAI Dashboard</h1>
+                    <p class="page-subtitle">
+                        AI-Based Multi-Hazard Road Safety Analysis
+                    </p>
+                </div>
+            </div>
+
+            {% with messages = get_flashed_messages() %}
+                {% if messages %}
+                    {% for message in messages %}
+                        <div class="flash">{{ message }}</div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            <div class="card upload-panel">
+
+                <div class="section-title">
+                    <h2>Video Analysis</h2>
+
+                    <span id="analysis-status" class="status-badge">
+                        READY
+                    </span>
+                </div>
+
+                <form
+                    class="video-upload-form"
+                    method="POST"
+                    action="{{ url_for('index') }}"
+                    enctype="multipart/form-data"
+                >
+
+                    <div class="upload-box">
+
+                        <input
+                            type="file"
+                            name="video_file"
+                            id="video-file"
+                            accept=".mp4,.avi,.mov,.mkv,.webm"
+                            required
+                        >
+
+                        <label
+                            for="video-file"
+                            class="file-label"
+                        >
+                            Choose Video
+                        </label>
+
+                        <span
+                            id="file-name"
+                            class="file-name"
+                        >
+                            No video selected
+                        </span>
+
+                    </div>
+
+                    <button
+                        type="submit"
+                        class="primary-button"
+                        id="upload-button"
+                    >
+                        Start Analysis
+                    </button>
+
+                </form>
+
+            </div>
+
+            {% if selected %}
+
+            <div class="card main-video-container">
+
+                <div class="section-title">
+
+                    <div>
+                        <h2>Processed Video</h2>
+
+                        <span class="video-source">
+                            {{ selected }}
+                        </span>
+                    </div>
+
+                    <button
+                        type="button"
+                        id="stop-analysis-button"
+                        class="stop-analysis-button"
+                        onclick="stopAnalysis()"
+                        disabled
+                    >
+                        ■ Analysis Not Running
+                    </button>
+
+                </div>
+
+                <div class="video-wrap dashboard-video-wrap">
+
+                    <!-- IMPORTANT:
+                         src is intentionally EMPTY.
+                         JavaScript starts it only when autostart=1
+                         is present after a fresh upload.
+                    -->
+
+                    <img
+                        id="processed-video"
+                        src=""
+                        data-video-url="{{ url_for('video_feed', path=selected) }}"
+                        alt="Processed video"
+                    >
+
+                    <div
+                        id="video-stopped-message"
+                        class="video-stopped-message"
+                    >
+
+                        <div class="stopped-icon">
+                            ■
+                        </div>
+
+                        <h3>
+                            Analysis Ready
+                        </h3>
+
+                        <p>
+                            Click
+                            <strong>Start Analysis</strong>
+                            after selecting a video to begin.
+                        </p>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+            <div class="live-metrics">
+
+                <div class="stat-card">
+                    <span class="stat-label">
+                        Distance
+                    </span>
+
+                    <strong id="distance-value">
+                        --
+                    </strong>
+
+                    <span class="stat-unit">
+                        m
+                    </span>
+                </div>
+
+                <div class="stat-card">
+                    <span class="stat-label">
+                        Speed
+                    </span>
+
+                    <strong id="speed-value">
+                        --
+                    </strong>
+
+                    <span class="stat-unit">
+                        km/h
+                    </span>
+                </div>
+
+                <div class="stat-card">
+                    <span class="stat-label">
+                        TTC
+                    </span>
+
+                    <strong id="ttc-value">
+                        --
+                    </strong>
+
+                    <span class="stat-unit">
+                        sec
+                    </span>
+                </div>
+
+                <div class="stat-card">
+                    <span class="stat-label">
+                        Risk
+                    </span>
+
+                    <strong
+                        id="risk-value"
+                        class="risk-safe"
+                    >
+                        SAFE
+                    </strong>
+                </div>
+
+                <div class="stat-card">
+                    <span class="stat-label">
+                        Brake Recommendation
+                    </span>
+
+                    <strong id="brake-value">
+                        --
+                    </strong>
+
+                    <span class="stat-unit">
+                        %
+                    </span>
+                </div>
+
+                <div class="stat-card">
+                    <span class="stat-label">
+                        Direction
+                    </span>
+
+                    <strong id="direction-value">
+                        --
+                    </strong>
+                </div>
+
+            </div>
+
+            <div class="section-heading">
+
+                <h2>
+                    Live Analysis
+                </h2>
+
+                <span
+                    id="live-indicator"
+                    class="live-indicator"
+                >
+                    ● READY
+                </span>
+
+            </div>
+
+            <div class="live-chart-grid">
+
+                <div class="card live-chart-card">
+
+                    <div class="chart-header">
+                        <h3>Distance</h3>
+                        <span>meters</span>
+                    </div>
+
+                    <div class="chart-container">
+                        <canvas id="distance-chart"></canvas>
+                    </div>
+
+                </div>
+
+                <div class="card live-chart-card">
+
+                    <div class="chart-header">
+                        <h3>Speed</h3>
+                        <span>km/h</span>
+                    </div>
+
+                    <div class="chart-container">
+                        <canvas id="speed-chart"></canvas>
+                    </div>
+
+                </div>
+
+                <div class="card live-chart-card">
+
+                    <div class="chart-header">
+                        <h3>Time to Collision</h3>
+                        <span>seconds</span>
+                    </div>
+
+                    <div class="chart-container">
+                        <canvas id="ttc-chart"></canvas>
+                    </div>
+
+                </div>
+
+                <div class="card live-chart-card">
+
+                    <div class="chart-header">
+                        <h3>Risk Level</h3>
+
+                        <span>
+                            0 SAFE · 1 WARNING · 2 DANGER
+                        </span>
+                    </div>
+
+                    <div class="chart-container">
+                        <canvas id="risk-chart"></canvas>
+                    </div>
+
+                </div>
+
+                <div class="card live-chart-card">
+
+                    <div class="chart-header">
+                        <h3>Detected Objects</h3>
+                        <span>count</span>
+                    </div>
+
+                    <div class="chart-container">
+                        <canvas id="objects-chart"></canvas>
+                    </div>
+
+                </div>
+
+                <div class="card live-chart-card">
+
+                    <div class="chart-header">
+                        <h3>Road Hazards</h3>
+                        <span>count</span>
+                    </div>
+
+                    <div class="chart-container">
+                        <canvas id="hazards-chart"></canvas>
+                    </div>
+
+                </div>
+
+            </div>
+
+            <div class="section-heading">
+                <h2>Detection Summary</h2>
+            </div>
+
+            <div class="detection-summary">
+
+                <div class="summary-card">
+                    <span>Vehicles</span>
+                    <strong id="vehicle-count">0</strong>
+                </div>
+
+                <div class="summary-card">
+                    <span>Animals</span>
+                    <strong id="animal-count">0</strong>
+                </div>
+
+                <div class="summary-card">
+                    <span>Potholes</span>
+                    <strong id="pothole-count">0</strong>
+                </div>
+
+                <div class="summary-card">
+                    <span>Humps</span>
+                    <strong id="hump-count">0</strong>
+                </div>
+
+                <div class="summary-card">
+                    <span>Risk</span>
+                    <strong id="summary-risk">
+                        SAFE
+                    </strong>
+                </div>
+
+                <div class="summary-card">
+                    <span>Trajectory</span>
+                    <strong id="trajectory-status">
+                        OK
+                    </strong>
+                </div>
+
+            </div>
+
+            {% else %}
+
+            <div class="card empty-video-state">
+
+                <div class="empty-video-icon">
+                    ▶
+                </div>
+
+                <h2>
+                    No Video Selected
+                </h2>
+
+                <p>
+                    Choose a video above and click
+                    <strong>Start Analysis</strong>
+                    to begin AI-based road safety analysis.
+                </p>
+
+            </div>
+
+            {% endif %}
+
+        </div>
+
+    </main>
+
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+    const fileInput =
+        document.getElementById("video-file");
+
+    const fileName =
+        document.getElementById("file-name");
+
+    if (fileInput && fileName) {
+
+        fileInput.addEventListener(
+            "change",
+            function () {
+
+                if (
+                    this.files &&
+                    this.files.length > 0
+                ) {
+                    fileName.textContent =
+                        this.files[0].name;
+                } else {
+                    fileName.textContent =
+                        "No video selected";
+                }
+
+            }
+        );
+    }
+
+    const selectedVideo =
+        document.getElementById("processed-video");
+
+    if (!selectedVideo) {
+        return;
+    }
+
+    const statusElement =
+        document.getElementById("analysis-status");
+
+    const liveIndicator =
+        document.getElementById("live-indicator");
+
+    const stopButton =
+        document.getElementById(
+            "stop-analysis-button"
+        );
+
+    const stoppedMessage =
+        document.getElementById(
+            "video-stopped-message"
+        );
+
+    let pollingTimer = null;
+    let analysisStopped = true;
+
+    const timeData = [];
+    const distanceData = [];
+    const speedData = [];
+    const ttcData = [];
+    const riskData = [];
+    const vehicleData = [];
+    const animalData = [];
+    const potholeData = [];
+    const humpData = [];
+
+    const MAX_POINTS = 80;
+
+    function makeChart(
+        id,
+        label,
+        data,
+        yTitle
+    ) {
+
+        const canvas =
+            document.getElementById(id);
+
+        if (
+            !canvas ||
+            typeof Chart === "undefined"
+        ) {
+            return null;
+        }
+
+        return new Chart(
+            canvas,
+            {
+                type: "line",
+
+                data: {
+                    labels: [],
+
+                    datasets: [{
+                        label: label,
+                        data: data,
+                        tension: 0.25,
+                        pointRadius: 0
+                    }]
+                },
+
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    animation: false,
+
+                    interaction: {
+                        intersect: false,
+                        mode: "index"
+                    },
+
+                    scales: {
+
+                        x: {
+                            title: {
+                                display: true,
+                                text: "Time (s)"
+                            }
+                        },
+
+                        y: {
+                            beginAtZero: true,
+
+                            title: {
+                                display: true,
+                                text: yTitle
+                            }
+                        }
+                    }
+                }
+            }
+        );
+    }
+
+    function makeMultiChart(
+        id,
+        datasets
+    ) {
+
+        const canvas =
+            document.getElementById(id);
+
+        if (
+            !canvas ||
+            typeof Chart === "undefined"
+        ) {
+            return null;
+        }
+
+        return new Chart(
+            canvas,
+            {
+                type: "line",
+
+                data: {
+                    labels: [],
+                    datasets: datasets
+                },
+
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    animation: false,
+
+                    interaction: {
+                        intersect: false,
+                        mode: "index"
+                    },
+
+                    scales: {
+
+                        x: {
+                            title: {
+                                display: true,
+                                text: "Time (s)"
+                            }
+                        },
+
+                        y: {
+                            beginAtZero: true,
+
+                            title: {
+                                display: true,
+                                text: "Count"
+                            }
+                        }
+                    }
+                }
+            }
+        );
+    }
+
+    const distanceChart =
+        makeChart(
+            "distance-chart",
+            "Distance",
+            distanceData,
+            "Distance (m)"
+        );
+
+    const speedChart =
+        makeChart(
+            "speed-chart",
+            "Speed",
+            speedData,
+            "Speed (km/h)"
+        );
+
+    const ttcChart =
+        makeChart(
+            "ttc-chart",
+            "TTC",
+            ttcData,
+            "TTC (s)"
+        );
+
+    const riskChart =
+        makeChart(
+            "risk-chart",
+            "Risk Level",
+            riskData,
+            "Risk"
+        );
+
+    const objectsChart =
+        makeMultiChart(
+            "objects-chart",
+            [
+                {
+                    label: "Vehicles",
+                    data: vehicleData,
+                    tension: 0.25,
+                    pointRadius: 0
+                },
+                {
+                    label: "Animals",
+                    data: animalData,
+                    tension: 0.25,
+                    pointRadius: 0
+                }
+            ]
+        );
+
+    const hazardsChart =
+        makeMultiChart(
+            "hazards-chart",
+            [
+                {
+                    label: "Potholes",
+                    data: potholeData,
+                    tension: 0.25,
+                    pointRadius: 0
+                },
+                {
+                    label: "Humps",
+                    data: humpData,
+                    tension: 0.25,
+                    pointRadius: 0
+                }
+            ]
+        );
+
+    function updateChart(
+        chart,
+        labels,
+        values
+    ) {
+
+        if (!chart) {
+            return;
+        }
+
+        chart.data.labels = labels;
+
+        chart.data.datasets[0].data =
+            values;
+
+        chart.update("none");
+    }
+
+    function updateMultiChart(
+        chart,
+        labels,
+        values1,
+        values2
+    ) {
+
+        if (!chart) {
+            return;
+        }
+
+        chart.data.labels = labels;
+
+        chart.data.datasets[0].data =
+            values1;
+
+        chart.data.datasets[1].data =
+            values2;
+
+        chart.update("none");
+    }
+
+    function pollStatus() {
+
+        if (analysisStopped) {
+            return;
+        }
+
+        fetch(
+            "{{ url_for('api_status') }}",
+            {
+                cache: "no-store"
+            }
+        )
+        .then(
+            response => response.json()
+        )
+        .then(
+            data => {
+
+                const distance =
+                    document.getElementById(
+                        "distance-value"
+                    );
+
+                const speed =
+                    document.getElementById(
+                        "speed-value"
+                    );
+
+                const ttc =
+                    document.getElementById(
+                        "ttc-value"
+                    );
+
+                const risk =
+                    document.getElementById(
+                        "risk-value"
+                    );
+
+                const brake =
+                    document.getElementById(
+                        "brake-value"
+                    );
+
+                const direction =
+                    document.getElementById(
+                        "direction-value"
+                    );
+
+                if (distance)
+                    distance.textContent =
+                        data.distance ?? "--";
+
+                if (speed)
+                    speed.textContent =
+                        data.speed ?? "--";
+
+                if (ttc)
+                    ttc.textContent =
+                        data.ttc ?? "--";
+
+                if (brake)
+                    brake.textContent =
+                        data.brake_pct ?? "--";
+
+                if (direction)
+                    direction.textContent =
+                        data.direction ?? "--";
+
+                if (risk) {
+
+                    risk.textContent =
+                        data.risk ?? "SAFE";
+
+                    risk.className = "";
+
+                    if (
+                        data.risk === "DANGER"
+                    ) {
+
+                        risk.classList.add(
+                            "risk-danger"
+                        );
+
+                    } else if (
+                        data.risk === "WARNING"
+                    ) {
+
+                        risk.classList.add(
+                            "risk-warning"
+                        );
+
+                    } else {
+
+                        risk.classList.add(
+                            "risk-safe"
+                        );
+                    }
+                }
+
+                const vehicleCount =
+                    document.getElementById(
+                        "vehicle-count"
+                    );
+
+                const animalCount =
+                    document.getElementById(
+                        "animal-count"
+                    );
+
+                const potholeCount =
+                    document.getElementById(
+                        "pothole-count"
+                    );
+
+                const humpCount =
+                    document.getElementById(
+                        "hump-count"
+                    );
+
+                const summaryRisk =
+                    document.getElementById(
+                        "summary-risk"
+                    );
+
+                const trajectory =
+                    document.getElementById(
+                        "trajectory-status"
+                    );
+
+                if (vehicleCount)
+                    vehicleCount.textContent =
+                        data.vehicle_count ?? 0;
+
+                if (animalCount)
+                    animalCount.textContent =
+                        data.animal_count ?? 0;
+
+                if (potholeCount)
+                    potholeCount.textContent =
+                        data.pothole_count ?? 0;
+
+                if (humpCount)
+                    humpCount.textContent =
+                        data.hump_count ?? 0;
+
+                if (summaryRisk)
+                    summaryRisk.textContent =
+                        data.risk ?? "SAFE";
+
+                if (trajectory)
+                    trajectory.textContent =
+                        data.trajectory_status ??
+                        "OK";
+
+                if (
+                    data.updated_at !== undefined &&
+                    data.updated_at !== null
+                ) {
+
+                    timeData.push(
+                        Number(data.updated_at)
+                    );
+
+                    distanceData.push(
+                        data.distance ?? null
+                    );
+
+                    speedData.push(
+                        data.speed ?? null
+                    );
+
+                    ttcData.push(
+                        data.ttc ?? null
+                    );
+
+                    let riskNumber = 0;
+
+                    if (
+                        data.risk === "WARNING"
+                    ) {
+                        riskNumber = 1;
+                    }
+
+                    if (
+                        data.risk === "DANGER"
+                    ) {
+                        riskNumber = 2;
+                    }
+
+                    riskData.push(
+                        riskNumber
+                    );
+
+                    vehicleData.push(
+                        data.vehicle_count ?? 0
+                    );
+
+                    animalData.push(
+                        data.animal_count ?? 0
+                    );
+
+                    potholeData.push(
+                        data.pothole_count ?? 0
+                    );
+
+                    humpData.push(
+                        data.hump_count ?? 0
+                    );
+
+                    while (
+                        timeData.length >
+                        MAX_POINTS
+                    ) {
+
+                        timeData.shift();
+                        distanceData.shift();
+                        speedData.shift();
+                        ttcData.shift();
+                        riskData.shift();
+                        vehicleData.shift();
+                        animalData.shift();
+                        potholeData.shift();
+                        humpData.shift();
+                    }
+
+                    const first =
+                        timeData[0];
+
+                    const labels =
+                        timeData.map(
+                            value =>
+                                (
+                                    value - first
+                                ).toFixed(1)
+                        );
+
+                    updateChart(
+                        distanceChart,
+                        labels,
+                        distanceData
+                    );
+
+                    updateChart(
+                        speedChart,
+                        labels,
+                        speedData
+                    );
+
+                    updateChart(
+                        ttcChart,
+                        labels,
+                        ttcData
+                    );
+
+                    updateChart(
+                        riskChart,
+                        labels,
+                        riskData
+                    );
+
+                    updateMultiChart(
+                        objectsChart,
+                        labels,
+                        vehicleData,
+                        animalData
+                    );
+
+                    updateMultiChart(
+                        hazardsChart,
+                        labels,
+                        potholeData,
+                        humpData
+                    );
+                }
+
+                if (
+                    statusElement &&
+                    data.active === true
+                ) {
+
+                    statusElement.textContent =
+                        "ANALYZING";
+
+                    statusElement.className =
+                        "status-badge status-live";
+                }
+            }
+        )
+        .catch(
+            error => {
+                console.log(
+                    "Status polling error:",
+                    error
+                );
+            }
+        );
+    }
+
+    window.stopAnalysis =
+        function () {
+
+            analysisStopped = true;
+
+            if (pollingTimer) {
+
+                clearInterval(
+                    pollingTimer
+                );
+
+                pollingTimer = null;
+            }
+
+            selectedVideo.src = "";
+
+            selectedVideo.style.display =
+                "none";
+
+            if (stoppedMessage) {
+
+                stoppedMessage.style.display =
+                    "flex";
+            }
+
+            if (stopButton) {
+
+                stopButton.disabled =
+                    true;
+
+                stopButton.textContent =
+                    "■ Analysis Stopped";
+            }
+
+            if (statusElement) {
+
+                statusElement.textContent =
+                    "STOPPED";
+
+                statusElement.className =
+                    "status-badge status-stopped";
+            }
+
+            if (liveIndicator) {
+
+                liveIndicator.textContent =
+                    "● STOPPED";
+
+                liveIndicator.classList.add(
+                    "live-stopped"
+                );
+            }
+        };
+
+    /*
+     * Fresh upload:
+     *     ?path=VIDEO&autostart=1
+     *
+     * Normal refresh:
+     *     ?path=VIDEO
+     *
+     * Therefore refresh does not start the stream.
+     */
+
+    const params =
+        new URLSearchParams(
+            window.location.search
+        );
+
+    const shouldAutostart =
+        params.get("autostart") === "1";
+
+    if (shouldAutostart) {
+
+        analysisStopped = false;
+
+        selectedVideo.src =
+            selectedVideo.dataset.videoUrl;
+
+        selectedVideo.style.display =
+            "block";
+
+        if (stoppedMessage) {
+
+            stoppedMessage.style.display =
+                "none";
+        }
+
+        if (stopButton) {
+
+            stopButton.disabled =
+                false;
+
+            stopButton.textContent =
+                "■ Stop Analysis";
+        }
+
+        if (statusElement) {
+
+            statusElement.textContent =
+                "ANALYZING";
+
+            statusElement.className =
+                "status-badge status-live";
+        }
+
+        if (liveIndicator) {
+
+            liveIndicator.textContent =
+                "● LIVE";
+
+            liveIndicator.classList.remove(
+                "live-stopped"
+            );
+        }
+
+        pollingTimer =
+            setInterval(
+                pollStatus,
+                500
+            );
+
+        pollStatus();
+
+        params.delete("autostart");
+
+        const cleanQuery =
+            params.toString();
+
+        history.replaceState(
+            {},
+            document.title,
+            window.location.pathname +
+            (
+                cleanQuery
+                    ? "?" + cleanQuery
+                    : ""
+            )
+        );
+
+    } else {
+
+        analysisStopped = true;
+
+        selectedVideo.src = "";
+
+        selectedVideo.style.display =
+            "none";
+
+        if (stoppedMessage) {
+
+            stoppedMessage.style.display =
+                "flex";
+        }
+
+        if (stopButton) {
+
+            stopButton.disabled =
+                true;
+
+            stopButton.textContent =
+                "■ Analysis Not Running";
+        }
+
+        if (statusElement) {
+
+            statusElement.textContent =
+                "READY";
+
+            statusElement.className =
+                "status-badge";
+        }
+
+        if (liveIndicator) {
+
+            liveIndicator.textContent =
+                "● READY";
+
+            liveIndicator.classList.remove(
+                "live-stopped"
+            );
+        }
+    }
+
+});
+</script>
+
+</body>
+</html>

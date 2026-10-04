@@ -1,38 +1,362 @@
-{% extends "base.html" %}
-{% block title %}Reports - CollisionAI{% endblock %}
-{% block content %}
-<h1>Session Reports</h1>
+<!DOCTYPE html>
+<html lang="en">
 
-<table class="data-table">
-  <thead>
-    <tr>
-      <th>Date/Time</th><th>Source</th><th>Duration</th><th>Danger</th><th>Warning</th>
-      <th>Vehicles</th><th>Animals</th><th>Potholes</th><th>Humps</th><th>Min Dist</th><th>Min TTC</th><th>Actions</th>
-    </tr>
-  </thead>
-  <tbody>
-    {% for s in sessions %}
-    <tr>
-      <td>{{ s.created_at[:16] }}</td>
-      <td>{{ s.source }}</td>
-      <td>{{ s.duration_s }}s</td>
-      <td>{{ s.danger_events }}</td>
-      <td>{{ s.warning_events }}</td>
-      <td>{{ s.vehicles }}</td>
-      <td>{{ s.animals }}</td>
-      <td>{{ s.potholes }}</td>
-      <td>{{ s.humps }}</td>
-      <td>{{ (s.min_distance ~ ' m') if s.min_distance is not none else '—' }}</td>
-      <td>{{ (s.min_ttc ~ ' s') if s.min_ttc is not none else '—' }}</td>
-      <td class="actions">
-        <a href="{{ url_for('report_detail', session_id=s.id) }}">VIEW REPORT</a>
-        <a href="{{ url_for('download_report', session_id=s.id) }}">DOWNLOAD HTML</a>
-        <a href="{{ url_for('download_csv', session_id=s.id) }}">DOWNLOAD CSV</a>
-      </td>
-    </tr>
-    {% else %}
-    <tr><td colspan="12">No sessions recorded yet.</td></tr>
-    {% endfor %}
-  </tbody>
-</table>
-{% endblock %}
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Reports - CollisionAI</title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='css/style.css') }}"
+    >
+
+</head>
+
+
+<body>
+
+<div class="app-shell">
+
+
+    <!-- =====================================================
+         SIDEBAR
+         ===================================================== -->
+
+    <aside class="sidebar">
+
+        <div class="brand">
+            <span class="brand-dot"></span>
+            <span>CollisionAI<br>SMART SAFETY</span>
+        </div>
+
+
+        <nav class="sidebar-nav">
+
+            <a href="{{ url_for('index') }}">
+                <span>⌂</span>
+                <span>Dashboard</span>
+            </a>
+
+
+            <a href="{{ url_for('camera_page') }}">
+                <span>◉</span>
+                <span>Camera</span>
+            </a>
+
+
+            <a href="{{ url_for('analytics_page') }}">
+                <span>▥</span>
+                <span>Analytics</span>
+            </a>
+
+
+            <a
+                href="{{ url_for('reports_page') }}"
+                class="active"
+            >
+                <span>▤</span>
+                <span>Reports</span>
+            </a>
+
+        </nav>
+
+
+        <!-- SIDEBAR FOOTER -->
+
+        <div class="sidebar-foot">
+
+            <div>
+                <span class="status-dot running"></span>
+                System Online
+            </div>
+
+            <div>
+                ADAS AI v1.0
+            </div>
+
+        </div>
+
+    </aside>
+
+
+    <!-- =====================================================
+         CONTENT
+         ===================================================== -->
+
+    <main class="content">
+
+        <div class="reports-page">
+
+
+            <div class="page-header">
+
+                <div>
+
+                    <div class="eyebrow">
+
+                        <span class="eyebrow-dot"></span>
+
+                        SESSION REPORTS
+
+                    </div>
+
+
+                    <h1>
+                        Session Reports
+                    </h1>
+
+
+                    <p class="page-subtitle">
+
+                        View and download reports generated
+                        from CollisionAI analysis sessions.
+
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <!-- =================================================
+                 REPORT TABLE
+                 ================================================= -->
+
+            <div class="card">
+
+                <div class="section-title">
+
+                    <div>
+
+                        <div class="eyebrow">
+                            ANALYSIS HISTORY
+                        </div>
+
+                        <h2>
+                            Recorded Sessions
+                        </h2>
+
+                    </div>
+
+
+                    <span class="status-badge">
+                        REPORTS
+                    </span>
+
+                </div>
+
+
+                <div class="table-wrapper">
+
+                    <table class="data-table">
+
+                        <thead>
+
+                            <tr>
+
+                                <th>
+                                    Date/Time
+                                </th>
+
+                                <th>
+                                    Source
+                                </th>
+
+                                <th>
+                                    Duration
+                                </th>
+
+                                <th>
+                                    Danger
+                                </th>
+
+                                <th>
+                                    Warning
+                                </th>
+
+                                <th>
+                                    Vehicles
+                                </th>
+
+                                <th>
+                                    Animals
+                                </th>
+
+                                <th>
+                                    Potholes
+                                </th>
+
+                                <th>
+                                    Humps
+                                </th>
+
+                                <th>
+                                    Min Dist
+                                </th>
+
+                                <th>
+                                    Min TTC
+                                </th>
+
+                                <th>
+                                    Actions
+                                </th>
+
+                            </tr>
+
+                        </thead>
+
+
+                        <tbody>
+
+                        {% for s in sessions %}
+
+                            <tr>
+
+                                <td>
+                                    {{ s.created_at[:16] }}
+                                </td>
+
+
+                                <td>
+                                    {{ s.source }}
+                                </td>
+
+
+                                <td>
+                                    {{ s.duration_s }}s
+                                </td>
+
+
+                                <td>
+                                    {{ s.danger_events }}
+                                </td>
+
+
+                                <td>
+                                    {{ s.warning_events }}
+                                </td>
+
+
+                                <td>
+                                    {{ s.vehicles }}
+                                </td>
+
+
+                                <td>
+                                    {{ s.animals }}
+                                </td>
+
+
+                                <td>
+                                    {{ s.potholes }}
+                                </td>
+
+
+                                <td>
+                                    {{ s.humps }}
+                                </td>
+
+
+                                <td>
+
+                                    {{
+                                        (s.min_distance ~ ' m')
+                                        if s.min_distance is not none
+                                        else '—'
+                                    }}
+
+                                </td>
+
+
+                                <td>
+
+                                    {{
+                                        (s.min_ttc ~ ' s')
+                                        if s.min_ttc is not none
+                                        else '—'
+                                    }}
+
+                                </td>
+
+
+                                <td class="actions">
+
+                                    <a
+                                        href="{{
+                                            url_for(
+                                                'report_detail',
+                                                session_id=s.id
+                                            )
+                                        }}"
+                                    >
+                                        VIEW REPORT
+                                    </a>
+
+
+                                    <a
+                                        href="{{
+                                            url_for(
+                                                'download_report',
+                                                session_id=s.id
+                                            )
+                                        }}"
+                                    >
+                                        DOWNLOAD HTML
+                                    </a>
+
+
+                                    <a
+                                        href="{{
+                                            url_for(
+                                                'download_csv',
+                                                session_id=s.id
+                                            )
+                                        }}"
+                                    >
+                                        DOWNLOAD CSV
+                                    </a>
+
+                                </td>
+
+                            </tr>
+
+
+                        {% else %}
+
+                            <tr>
+
+                                <td
+                                    colspan="12"
+                                    style="text-align:center;"
+                                >
+                                    No sessions recorded yet.
+                                </td>
+
+                            </tr>
+
+                        {% endfor %}
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </main>
+
+</div>
+
+</body>
+</html>
